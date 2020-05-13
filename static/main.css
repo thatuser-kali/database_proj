@@ -1,0 +1,58 @@
+html,body { 
+    height: 100%;
+    margin: 0px; 
+    padding: 0px; }
+
+#form {
+    width: 300px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+#editProf {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+/* Main Page */
+h1{
+    text-align: center
+}
+
+.row{
+    text-align: center
+}
+.row.content {
+    height: 100%;
+}
+
+/* Set gray background color and 100% height */
+.sidenav {
+    padding-top: 20px;
+    background-color: #ade6f0;
+    height: 100%;
+}
+
+#user {
+    position: absolute;
+    bottom: 50%;
+    left: 15%;
+    transform: translate(-15%);
+}
+
+#admin {
+    position: absolute;
+    bottom: 50%;
+    right: 10%;
+    transform: translate(-5%);
+}
