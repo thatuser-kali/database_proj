@@ -2,13 +2,13 @@ import os
 from flask import Flask, render_template, url_for, request, redirect, logging
 from passlib.hash import sha256_crypt
 from werkzeug.utils import secure_filename
-from flask_sqlalchemy import  SQLAlchemy
-from sqlalchemy.orm import scoped_session, sessionmaker
+import mysql.connector
+
+
+mydb = mysql.connector.connect(host="localhost", user="root", password="", database="project")
+cursor = mydb.cursor()
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"]=('mysql://root:''@localhost/mybook_lazy')
-db = SQLAlchemy(app)
-
 
 @app.route("/")
 def index():
@@ -18,46 +18,36 @@ def index():
 @app.route("/userLogin", methods=["POST", "GET"])
 def userLogin():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        email = request.form.get("email")
+        password = request.form.get("password")
+        cursor.execute("SELECT * FROM user WHERE email='" + email + "' AND password='" + password + "'")
+        data =[]
+        data = cursor.fetchall()
 
-        usernamedb = db.execute("SELECT username FROM admin WHERE username:=username", {"username":username}).fetchone()
-        passworddb = db.execute("SELECT password FROM admin WHERE password:=password", {"password":password}).fetchone()
-
-        if usernamedb  is None:
+        if data is None:
             return render_template("user_login.html")
         else:
-            for pass_word in passworddb:
-                if sha256_crypt.verfiy(password, pass_word):
-                    return redirect(url_for("userProf"))
-                else:
-                    return render_template("user_login.html")
+            return redirect(url_for("user", name=data))
     return render_template("user_login.html")
-    
+
+UPLOAD_FOLDER = "C:/Users/malik/Desktop/Flask/static/img/uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 @app.route("/userSign", methods=["POST", "GET"])
 def userSign():
     if request.method == "POST":
-         firstname = request.form["firstname"]
-         lastname = request.form["lastname"]
-         username = request.form["username"]
-         email = request.form["email"]
-         password = request.form["password"]
-         confirm = request.form["confirm"]
-         dob = request.form["dob"]
-         gender = request.form["gender"]
-         profilePic = request.files["profilePic"]
-         profilePic.save(profilePic.filename)
+         firstname = request.form.get("firstname")
+         lastname = request.form.get("lastname")
+         email = request.form.get("email")
+         password = request.form.get("password")
+         confirm = request.form.get("confirm")
+         dob = request.form.get("dob")
+         gender = request.form.get("gender")
          
-         pic=profilePic.filename
-
-         if profilePic.filename == "":
-            return redirect(url_for("userSign"))
-
          if password == confirm:
-            db.execute("INSERT INTO users (f_name, l_name, username, email, password, DOB, gender, profilePic) VALUES (:firstname, :lastname, :username, :email, :password, :DOB, :gender, :profilePic)",
-            {"f_name":firstname, "l_name":lastname, "username":username, "email":email, "password":password, "DOB":dob, "gender":gender, "profilePic":pic})
-            db.commit()
+            query = "INSERT INTO users (firstname, lastname, gender, date_of_birth, email, password) VALUES (%s, %s, %s, %s, %s, %s)"
+            cursor.execute(query, (firstname, lastname, gender, dob, email, password ))
+            mydb.commit()
             return redirect(url_for("userLogin"))
          else:
             return render_template("user_signup.html")
@@ -67,43 +57,34 @@ def userSign():
 @app.route("/adminLogin", methods=["POST", "GET"])
 def adminLogin():
     if request.method == "POST":
-        adminname = request.form["adminname"]
-        password = request.form["password"]
+        adminname = request.form.get("adminname")
+        password = request.form.get("password")
+        cursor.execute("SELECT * FROM admin WHERE adminname='" + adminname + "' AND password='" + password + "'")
+        data = cursor.fetchone()
 
-        adminnamedb = db.execute("SELECT adminname FROM admin WHERE adminname:=adminname", {"adminname":adminname}).fetchone()
-        passworddb = db.execute("SELECT password FROM admin WHERE password:=password",{"password":password}).fetchone()
-
-        if adminnamedb  is None:
+        if data is None:
             return render_template("admin_login.html")
         else:
-            for pass_word in passworddb:
-                if sha256_crypt.verfiy(password, pass_word):
-                    return redirect(url_for("admin"))
-                else:
-                    return render_template("admin_login.html")
-                    
+            return redirect(url_for("admin"))
     return render_template("admin_login.html")
 
 @app.route("/logout")
 def logout():
     return render_template("index.html")
 
-
 #Profile Pages
-@app.route("/userProf")
-def user():
-    return render_template("user_prof.html")
+@app.route("/userProf/<name>", methods=["GET", "POST"])
+def user(name):
+    return render_template("user_prof.html", name=name)
 
-@app.route("/adminProf")
+@app.route("/adminProf", methods=["GET"])
 def admin():
-    return render_template("admin_prof.html")
+    cursor.execute("SELECT * FROM users")
+    data = cursor.fetchall()
+    return render_template("admin_prof.html", users= data)
     
-
 @app.route("/userProfEdit")
 def useredit():
-    if pic:
-        filename = secure_filename(profilePic.filename)
-        profilePic.save(os.path.join(app.config["IMAGE_UPLOADS"], filename))
     return render_template("/user_edit.html")
 
 
